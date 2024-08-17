@@ -10,9 +10,19 @@ class CNN(nn.modules):
     def __init__(self):
         super.__init__()
         self.seq=nn.Sequential(
-            nn.Conv2d(in_channels=1, out_channels=1, kernel_size=5, stride=1, padding = 1), #size = (28-5+2)/1 = 25
-            nn.BatchNorm2d(1),
-            nn.ReLU()
+            nn.Conv2d(in_channels=1, out_channels=16, kernel_size=3, stride=1, padding = 1), 
+            nn.BatchNorm2d(num_features=16),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=3,padding=0),
+
+            nn.Conv2d(in_channels=16, out_channels=32, kernel_size=3, stride=1, padding = 1), 
+            nn.BatchNorm2d(num_features=32),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=3,padding=0),
+
+            nn.Linear(32*2*2,128),
+            nn.Linear(128,10),
+            nn.Softmax()
         )
     
     def forward(self,x):
@@ -34,9 +44,3 @@ trainloader = DataLoader(traindata,10,shuffle=True)
 images, labels =  next(iter(traindata))
 
 print(images.shape,labels)
-# for data in traindata:
-#     # print(data[0])
-#     data[0]
-#     cnt+=1
-#     if(cnt==10):
-#         break
