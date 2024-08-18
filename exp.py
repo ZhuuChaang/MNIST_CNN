@@ -6,23 +6,26 @@ import torchvision
 from torchvision import transforms
 import matplotlib.pyplot as plt
 
+from tqdm import tqdm
+
 class CNN(nn.modules):
     def __init__(self):
         super.__init__()
         self.seq=nn.Sequential(
-            nn.Conv2d(in_channels=1, out_channels=16, kernel_size=3, stride=1, padding = 1), 
+            nn.Conv2d(in_channels=1, out_channels=16, kernel_size=3, stride=1, padding = 1), # (1,28,28) => (16,28,28)
             nn.BatchNorm2d(num_features=16),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=3,padding=0),
+            nn.MaxPool2d(kernel_size=3,padding=0), #(16,9,9)
 
-            nn.Conv2d(in_channels=16, out_channels=32, kernel_size=3, stride=1, padding = 1), 
+            nn.Conv2d(in_channels=16, out_channels=32, kernel_size=3, stride=1, padding = 1), #(32,9,9)
             nn.BatchNorm2d(num_features=32),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=3,padding=0),
+            nn.MaxPool2d(kernel_size=3,padding=0), #(32,3,3)
 
-            nn.Linear(32*2*2,128),
+            nn.Flatten(),
+
+            nn.Linear(32*3*3,128),
             nn.Linear(128,10),
-            nn.Softmax()
         )
     
     def forward(self,x):
@@ -40,7 +43,32 @@ traindata = ds.MNIST(root="./dataset",train=True,transform=datatrans, download=F
 
 trainloader = DataLoader(traindata,10,shuffle=True)
 # testloader  = DataLoader(testdata, 128,shuffle=False)
-# cnt=0
-images, labels =  next(iter(traindata))
 
-print(images.shape,labels)
+ctrl=True #train or test
+
+if(ctrl):
+    classifier = CNN().to("cuda:0")
+
+    criterion = nn.CrossEntropyLoss()
+    opt = torch.optim.Adam(list(classifier.parameters()),0.001)
+
+
+    for i in tqdm(range(100)):
+        for input, label in traindata:
+            input=input.to("cuda:0")
+            label=label.to("cuda:0")
+            
+            output = classifier(input)
+            loss = criterion(output,label)
+                        
+            opt.zero_grad()
+            loss.backward()
+            opt.step()
+
+        print(f"epoch: {i}, loss at {loss}")
+    torch.cuda.empty_cache()
+
+    torch.save(classifier,"models/classifier.pth")
+
+else:
+    pass
