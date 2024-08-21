@@ -8,9 +8,9 @@ import matplotlib.pyplot as plt
 
 from tqdm import tqdm
 
-class CNN(nn.modules):
+class CNN(nn.Module):
     def __init__(self):
-        super.__init__()
+        super().__init__()
         self.seq=nn.Sequential(
             nn.Conv2d(in_channels=1, out_channels=16, kernel_size=3, stride=1, padding = 1), # (1,28,28) => (16,28,28)
             nn.BatchNorm2d(num_features=16),
@@ -29,8 +29,8 @@ class CNN(nn.modules):
         )
     
     def forward(self,x):
-        self.seq(x)
-
+        output = self.seq(x)
+        return output
 
 datatrans = transforms.Compose(
     [transforms.ToTensor(),
@@ -41,7 +41,7 @@ datatrans = transforms.Compose(
 traindata = ds.MNIST(root="./dataset",train=True,transform=datatrans, download=False)
 # testdata  = ds.MNIST(root="./dataset",train=False,download=False)
 
-trainloader = DataLoader(traindata,10,shuffle=True)
+trainloader = DataLoader(traindata,batch_size=16,shuffle=True)
 # testloader  = DataLoader(testdata, 128,shuffle=False)
 
 ctrl=True #train or test
@@ -50,15 +50,16 @@ if(ctrl):
     classifier = CNN().to("cuda:0")
 
     criterion = nn.CrossEntropyLoss()
-    opt = torch.optim.Adam(list(classifier.parameters()),0.001)
+    opt = torch.optim.Adam(list(classifier.parameters()),0.0001)
 
 
-    for i in tqdm(range(100)):
-        for input, label in traindata:
-            input=input.to("cuda:0")
+    for i in tqdm(range(20)):
+        for data, label in trainloader:
+            data=data.to("cuda:0")
             label=label.to("cuda:0")
             
-            output = classifier(input)
+            output = classifier(data)
+
             loss = criterion(output,label)
                         
             opt.zero_grad()
