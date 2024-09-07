@@ -7,6 +7,10 @@ from torchvision import transforms
 import matplotlib.pyplot as plt
 
 from tqdm import tqdm
+import numpy as np
+
+from sklearn.preprocessing import label_binarize
+from sklearn.metrics import confusion_matrix, precision_score, accuracy_score,recall_score, f1_score
 
 class CNN(nn.Module):
     def __init__(self):
@@ -38,15 +42,13 @@ datatrans = transforms.Compose(
 )
 
 
-traindata = ds.MNIST(root="./dataset",train=True,transform=datatrans, download=False)
-# testdata  = ds.MNIST(root="./dataset",train=False,download=False)
 
-trainloader = DataLoader(traindata,batch_size=16,shuffle=True)
-# testloader  = DataLoader(testdata, 128,shuffle=False)
-
-ctrl=True #train or test
+ctrl=False #train(t) or test(f)
 
 if(ctrl):
+    traindata = ds.MNIST(root="./dataset",train=True,transform=datatrans, download=False)
+    trainloader = DataLoader(traindata,batch_size=16,shuffle=True)
+
     classifier = CNN().to("cuda:0")
 
     criterion = nn.CrossEntropyLoss()
@@ -72,4 +74,22 @@ if(ctrl):
     torch.save(classifier,"models/classifier.pth")
 
 else:
-    pass
+    print("----------------------testing--------------------")
+    testdata  = ds.MNIST(root="./dataset",train=False,transform=datatrans,download=False)
+    testloader  = DataLoader(testdata,batch_size=16,shuffle=False)
+
+    classifier =  torch.load("models/classifier.pth")
+    classifier.cuda().eval()
+
+    criterion = nn.CrossEntropyLoss()
+
+
+    for data, label in testloader:
+        data=data.to("cuda:0")
+        label=label.to("cuda:0")
+
+        pred = classifier(data)
+        pred=pred.cpu().detach().numpy()
+
+
+
