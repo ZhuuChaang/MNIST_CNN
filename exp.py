@@ -83,6 +83,7 @@ else:
 
     criterion = nn.CrossEntropyLoss()
 
+    output=[]
 
     for data, label in testloader:
         data=data.to("cuda:0")
@@ -91,5 +92,8 @@ else:
         pred = classifier(data)
         pred=pred.cpu().detach().numpy()
 
+        output.append(pred)
 
-
+    output=np.vstack(output)
+    print(output.shape)
+    print(output)
