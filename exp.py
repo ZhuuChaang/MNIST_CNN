@@ -9,8 +9,12 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 import numpy as np
 
+import torch.nn.functional as F
+
 from sklearn.preprocessing import label_binarize
 from sklearn.metrics import confusion_matrix, precision_score, accuracy_score,recall_score, f1_score
+
+
 
 class CNN(nn.Module):
     def __init__(self):
@@ -29,7 +33,7 @@ class CNN(nn.Module):
             nn.Flatten(),
 
             nn.Linear(32*3*3,128),
-            nn.Linear(128,10),
+            nn.Linear(128,10)
         )
     
     def forward(self,x):
@@ -46,12 +50,13 @@ datatrans = transforms.Compose(
 ctrl=False #train(t) or test(f)
 
 if(ctrl):
+    print("----------------------training--------------------")
     traindata = ds.MNIST(root="./dataset",train=True,transform=datatrans, download=False)
     trainloader = DataLoader(traindata,batch_size=16,shuffle=True)
 
     classifier = CNN().to("cuda:0")
 
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.CrossEntropyLoss() # cross entropy loss will call softmax function implicitly
     opt = torch.optim.Adam(list(classifier.parameters()),0.0001)
 
 
@@ -90,6 +95,8 @@ else:
         label=label.to("cuda:0")
 
         pred = classifier(data)
+        pred = F.softmax(pred,dim=1)
+
         pred=pred.cpu().detach().numpy()
 
         output.append(pred)
