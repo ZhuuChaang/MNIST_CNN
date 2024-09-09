@@ -16,6 +16,8 @@ from sklearn.metrics import confusion_matrix, precision_score, accuracy_score,re
 
 
 
+
+
 class CNN(nn.Module):
     def __init__(self):
         super().__init__()
@@ -86,9 +88,8 @@ else:
     classifier =  torch.load("models/classifier.pth")
     classifier.cuda().eval()
 
-    criterion = nn.CrossEntropyLoss()
-
-    output=[]
+    output_pro=[]
+    labels=[]
 
     for data, label in testloader:
         data=data.to("cuda:0")
@@ -98,9 +99,22 @@ else:
         pred = F.softmax(pred,dim=1)
 
         pred=pred.cpu().detach().numpy()
+        label=label.cpu().detach()
 
-        output.append(pred)
+        output_pro.append(pred)
+        labels.extend(label)
 
-    output=np.vstack(output)
-    print(output.shape)
-    print(output)
+    output_pro=np.vstack(output_pro)
+    output=np.apply_along_axis(func1d=np.argmax,axis=1,arr=output_pro)
+
+    labels=np.array(labels)
+
+
+    # print(output.shape)
+    # print(output)
+
+    # print(labels.shape)
+    # print(output)
+
+    cm = confusion_matrix(y_true=labels,y_pred=output)
+    print(cm)
